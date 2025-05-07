@@ -1,51 +1,275 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Juego</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Menú de Juegos / Game Menu</title>
     <style>
         body {
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
-            color: #fff;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
             margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom right, #222, #444);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
         }
-        h1 {
-            font-size: 3em;
+
+        #snowCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        #clock {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 18px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 10px;
+            z-index: 3;
+        }
+
+        .card {
+            background: #333;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 300px;
             margin-bottom: 20px;
+            z-index: 2;
+            position: relative;
         }
-        p {
-            font-size: 1.5em;
-            margin-bottom: 30px;
-        }
-        button {
-            background-color: #fff;
-            color: #4facfe;
+
+        input[type="password"], input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            margin-top: 10px;
+            width: 100%;
             border: none;
-            padding: 15px 30px;
-            font-size: 1em;
-            border-radius: 30px;
+            border-radius: 8px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 8px;
+            color: white;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
+
         button:hover {
-            background-color: #e0e0e0;
+            background-color: #0056b3;
         }
-        footer {
-            position: fixed;
-            bottom: 10px;
-            width: 100%;
-            font-size: 0.9em;
+
+        .hidden {
+            display: none;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        #gameList {
+            text-align: left;
+            margin-top: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow: auto;
+            max-height: 300px;
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 20px;
+        }
+
+        #gameList li {
+            margin-bottom: 6px;
+        }
+
+        .updates-list {
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.5;
+            background-color: #444;
+            margin-top: 10px;
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .no-results {
+            color: #ff6b6b;
+            font-style: italic;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>¡Bienvenido a mi juego!</h1>
-    <p>Muy pronto podrás jugar en línea aquí.</p>
-    <button disabled>Próximamente</button>
-    <footer>© 2025 Mi Juego - Todos los derechos reservados</footer>
+    <canvas id="snowCanvas"></canvas>
+    <div id="clock"></div>
+    <div class="card" id="loginCard">
+        <h2>Contraseña / Password</h2>
+        <p>Introduce la contraseña para continuar.<br>Enter password to continue.</p>
+        <input type="password" id="passwordInput" placeholder="Contraseña / Password">
+        <button onclick="verificarContrasena()">Entrar / Enter</button>
+    </div>
+
+    <div class="card hidden" id="menuCard">
+        <h2>Menú de Juegos / Game Menu</h2>
+        <input type="text" id="search" placeholder="Buscar juegos...">
+        <ul id="gameList"></ul>
+
+        <div class="updates-list" id="updatesList">
+            <h3>🆕 Nuevas Actualizaciones / New Updates</h3>
+            <strong>Juegos Nuevos / New Games:</strong>
+            <ul>
+                <li>🎉 Añadido Eaglercraft 1.8.8</li>
+                <li>🎉 Añadido Eaglercraft 1.5</li>
+            </ul>
+            <strong>Errores Arreglados / Bugs Fixed:</strong>
+            <ul>
+                <li>✔️ Corrección de problemas de conexión.</li>
+                <li>✔️ Mejoras en la interfaz y rendimiento.</li>
+                <li>🐞 Arreglado error al buscar juegos no existentes.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const passwordInput = document.getElementById('passwordInput');
+        const loginCard = document.getElementById('loginCard');
+        const menuCard = document.getElementById('menuCard');
+        const gameList = document.getElementById('gameList');
+        const searchInput = document.getElementById('search');
+        const clock = document.getElementById('clock');
+
+        const allGames = [
+            { name: "Eaglercraft 1.8.8", url: "https://new-sandbox-program-10-14427285.codehs.me/" },
+            { name: "Eaglercraft 1.5", url: "https://new-sandbox-program-10-14427285.codehs.me/" }
+        ];
+
+        function verificarContrasena() {
+            const pass = passwordInput.value.trim();
+            if (pass === "caca123" || pass === "poop123") {
+                loginCard.classList.add("hidden");
+                menuCard.classList.remove("hidden");
+                displayGames(allGames);
+            } else {
+                alert("❌ Contraseña incorrecta / Incorrect password");
+                passwordInput.value = "";
+                passwordInput.focus();
+            }
+        }
+
+        function abrirJuego(url) {
+            const ventana = window.open(url, "_blank", "width=800,height=600,resizable=yes");
+            if (!ventana) {
+                alert("Por favor permite ventanas emergentes. Please allow pop-ups.");
+            }
+        }
+
+        passwordInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                verificarContrasena();
+            }
+        });
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const filteredGames = allGames.filter(game => game.name.toLowerCase().includes(query));
+            displayGames(filteredGames);
+        });
+
+        function displayGames(games) {
+            gameList.innerHTML = '';
+            if (games.length === 0) {
+                gameList.innerHTML = '<li class="no-results">No se encontraron juegos.</li>';
+            } else {
+                games.forEach(game => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `<button onclick="abrirJuego('${game.url}')">🎮 ${game.name}</button>`;
+                    gameList.appendChild(listItem);
+                });
+            }
+        }
+
+        function updateClock() {
+            const now = new Date();
+            clock.textContent = now.toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Nieve decorativa
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const numFlakes = 200;
+        const flakes = [];
+        for (let i = 0; i < numFlakes; i++) {
+            flakes.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 2 + 1,
+                speedX: Math.random() * 3 - 1.5,
+                speedY: Math.random() * 2 + 1,
+                opacity: Math.random() * 0.5 + 0.3
+            });
+        }
+
+        function drawSnow() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let flake of flakes) {
+                ctx.beginPath();
+                ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${flake.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        function updateSnow() {
+            for (let flake of flakes) {
+                flake.x += flake.speedX;
+                flake.y += flake.speedY;
+                if (flake.x > canvas.width) flake.x = 0;
+                if (flake.x < 0) flake.x = canvas.width;
+                if (flake.y > canvas.height) {
+                    flake.y = 0;
+                    flake.x = Math.random() * canvas.width;
+                }
+            }
+        }
+
+        function animateSnow() {
+            drawSnow();
+            updateSnow();
+            requestAnimationFrame(animateSnow);
+        }
+        animateSnow();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
 </body>
 </html>
